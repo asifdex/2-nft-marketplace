@@ -48,7 +48,6 @@ export const walletConect = createAsyncThunk(
         method: "eth_requestAccounts",
       });
       thankApi.dispatch(setCurrentAccount(accounts[0]));
-      // window.location.reload();
     } catch (error) {
       console.log(error);
     }
@@ -75,9 +74,9 @@ export const getAllTransaction = createAsyncThunk(
           ammount: parseInt(transaction.ammount._hex) / 10 ** 18,
           message: transaction.message,
           keyword: transaction.keyword,
-          timestamp: new Date(
-            transaction.timestamp.toNumber() * 1000
-          ).toLocaleString(),
+          timestamp: transaction.timestamp ? 
+          new Date(transaction.timestamp.toNumber() * 1000).toLocaleString() : "N/A",
+          
         })
       );
       return structedTransation;
@@ -90,9 +89,16 @@ export const getAllTransaction = createAsyncThunk(
 export const sendTransaction = createAsyncThunk(
   "transaction/getaAlltrans",
   async (_, trunkAPI) => {
-    const state = trunkAPI.getState() as { transaction: transactionState };
-    const { formData, currentAccount } = state.transaction;
+    console.log("sendTransaction called"); 
+    const state = trunkAPI.getState() as { transactions: transactionState };
+    
+    const { formData, currentAccount } = state.transactions;
+    console.log(state,"state" );
+    
+    console.log("sendTransaction called 2"); 
     if (window.ethereum) {
+    console.log("sendTransaction called 3"); // Log when the function is called
+
       const { addressTo, amount, keyword, message } = formData;
       const transactionContract = await createEthContract();
 
@@ -111,7 +117,12 @@ export const sendTransaction = createAsyncThunk(
       });
 
       if (transactionContract) {
+        console.log("transactionContract is herer");
+    console.log("sendTransaction called 4"); // Log when the function is called
+        
         try {
+    console.log("sendTransaction called 5"); // Log when the function is called
+
           const addToBlock = await transactionContract.addToBlockChain(
             addressTo,
             parsedAmount,
@@ -124,11 +135,13 @@ export const sendTransaction = createAsyncThunk(
 
           const transactionCount = await transactionContract.getTransactionCount();
           localStorage.setItem("transactionCount", transactionCount.toNumber());
+          trunkAPI.dispatch(getAllTransaction()); 
         } catch (error) {
           console.log(error);
         }
       }
     }
+    await window.location.reload()
   }
 );
 
@@ -159,7 +172,7 @@ const transactionsSlice = createSlice({
       state,
       action: PayloadAction<transactionState["formData"]>
     ) => {
-      state.formData = action.payload;
+      state.formData = {...state.formData ,...action.payload};
     },
     setCurrentAccount: (state, action) => {
       state.currentAccount = action.payload;
@@ -178,8 +191,13 @@ const transactionsSlice = createSlice({
     builder.addCase(getAllTransaction.fulfilled,(state,action) =>{
       state.transactions =action.payload || []
     })
+    // builder.addCase(sendTransaction.fulfilled,(state,action) => {
+    //   state.formData=action.payload;
+    //   state.transactionCount+=1;
+    // })
+
   }
 });
-export const { setCurrentAccount, setFromData, setIsLoading, setTransactions, } =
+export const { setCurrentAccount, setFromData, setIsLoading, setTransactions } =
   transactionsSlice.actions;
 export default transactionsSlice.reducer;

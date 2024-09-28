@@ -12,7 +12,7 @@ declare type InputProps = {
   name?: string;
   type?: string;
   value?: number;
-  handleChange: () => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>,name:string) => void;
 };
 
 
