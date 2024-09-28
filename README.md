@@ -1,40 +1,159 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { ethers } from "ethers";
+import { contractABI, contractAddress } from "../utils/constants";
 
-## Getting Started
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
 
-First, run the development server:
+const { ethereum } = window;
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+export interface TransactionState {
+  formData: {
+    addressTo: string;
+    amount: string;
+    keyword: string;
+    message: string;
+  };
+  currentAccount: string;
+  isLoading: boolean;
+  transactionCount: number;
+  transactions: any[];
+}
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+const initialState: TransactionState = {
+  formData: { addressTo: "", amount: "", keyword: "", message: "" },
+  currentAccount: "",
+  isLoading: false,
+  transactionCount: Number(localStorage.getItem("transactionCount")) || 0,
+  transactions: [],
+};
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+const createEthereumContract = () => {
+  const provider = new ethers.providers.Web3Provider(ethereum);
+  const signer = provider.getSigner();
+  const transactionsContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+  return transactionsContract;
+};
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+export const checkIfWalletIsConnected = createAsyncThunk("transaction/checkIfWalletIsConnected", async (_, thunkAPI) => {
+  try {
+    if (!ethereum) {
+      alert("Please install MetaMask.");
+      return;
+    }
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+    const accounts = await ethereum.request({ method: "eth_accounts" });
+    if (accounts.length) {
+      thunkAPI.dispatch(setCurrentAccount(accounts[0]));
+      thunkAPI.dispatch(getAllTransactions());
+    } else {
+      console.log("No accounts found");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
 
-## Learn More
+export const connectWallet = createAsyncThunk("transaction/connectWallet", async (_, thunkAPI) => {
+  try {
+    if (!ethereum) return alert("Please install MetaMask.");
 
-To learn more about Next.js, take a look at the following resources:
+    const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+    thunkAPI.dispatch(setCurrentAccount(accounts[0]));
+    window.location.reload();
+  } catch (error) {
+    console.error(error);
+  }
+});
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+export const getAllTransactions = createAsyncThunk("transaction/getAllTransactions", async (_, thunkAPI) => {
+  try {
+    if (ethereum) {
+      const transactionsContract = createEthereumContract();
+      const availableTransactions = await transactionsContract.getAllTransactions();
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+      const structuredTransactions = availableTransactions.map((transaction: any) => ({
+        addressTo: transaction.receiver,
+        addressFrom: transaction.sender,
+        timestamp: new Date(transaction.timestamp.toNumber() * 1000).toLocaleString(),
+        message: transaction.message,
+        keyword: transaction.keyword,
+        amount: parseInt(transaction.amount._hex) / 10 ** 18,
+      }));
 
-## Deploy on Vercel
+      return structuredTransactions;
+    } else {
+      console.log("Ethereum is not present");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+export const sendTransaction = createAsyncThunk("transaction/sendTransaction", async (_, thunkAPI) => {
+  const state = thunkAPI.getState() as { transaction: TransactionState };
+  const { formData, currentAccount } = state.transaction;
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+  try {
+    if (ethereum) {
+      const { addressTo, amount, keyword, message } = formData;
+      const transactionsContract = createEthereumContract();
+      const parsedAmount = ethers.utils.parseEther(amount);
+
+      await ethereum.request({
+        method: "eth_sendTransaction",
+        params: [{
+          from: currentAccount,
+          to: addressTo,
+          gas: "0x5208", // 21000 GWEI
+          value: parsedAmount._hex,
+        }],
+      });
+
+      const transactionHash = await transactionsContract.addToBlockchain(addressTo, parsedAmount, message, keyword);
+
+      thunkAPI.dispatch(setIsLoading(true));
+      await transactionHash.wait();
+      thunkAPI.dispatch(setIsLoading(false));
+
+      const transactionCount = await transactionsContract.getTransactionCount();
+      localStorage.setItem("transactionCount", transactionCount.toNumber());
+    } else {
+      console.log("No ethereum object");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+export const transactionSlice = createSlice({
+  name: "transaction",
+  initialState,
+  reducers: {
+    setFormData: (state, action: PayloadAction<TransactionState["formData"]>) => {
+      state.formData = action.payload;
+    },
+    setCurrentAccount: (state, action: PayloadAction<string>) => {
+      state.currentAccount = action.payload;
+    },
+    setIsLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+    setTransactions: (state, action: PayloadAction<any[]>) => {
+      state.transactions = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(getAllTransactions.fulfilled, (state, action) => {
+      state.transactions = action.payload || [];
+    });
+  },
+});
+
+export const { setFormData, setCurrentAccount, setIsLoading, setTransactions } = transactionSlice.actions;
+
+export default transactionSlice.reducer;

@@ -1,20 +1,82 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    "./src/pages/**/*.{js,ts,jsx,tsx}",
+    "./src/components/**/*.{js,ts,jsx,tsx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    
+      
+   
+ 
     extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      colors: {
+        'blue': '#1fb6ff',
+        'purple': '#7e5bef',
+        'orange': '#ff7849',
+        'yellow': '#ffc82c',
+        'gray-dark': '#273444',
+        'gray': '#8492a6',
+        'gray-light': '#d3dce6',
+         "grayDark":' #0E1823',
+         "darkbg":"#090F15",
+         "grayborder":"#DCDCDC",
+         "darktext":"#667D94",
+         "loadbg":"#9d9d9d",
+         "darkbox":"#0C1621",
+         "black":"#000000",
+         "darkGraytext":"#667D94",
+         "lightGray":"#A5BBD0"
       },
+      screens: {
+        'smPro': {'min': '430px'},
+        'phone': {'max': '500px'},
+        'minphone': {'min': '500px'},
+        'middlePro': {'max': '350px'},
+        'middllarge': {'max': '380px'},
+        'doublesm': {'max': '340px'},
+        'sm': {'min': '640px', 'max': '767px'},
+         'mdPro':{'min': '640px'},
+        'esm': {'max': '767px'},
+        'gridBox': {'min': '1110px'},
+        mf: "990px",
+        'bigPhone':{'max': '770px'},
+         'md': '768px',
+          'lg': '1024px',
+        'sxl':{'max': '1020px'},
+        'xl': '1280px',
+        '2xl': '1300px',
+        "bigPc":{'min': '1700px'}
+      },
+
+      fontFamily: {
+        // display: ["Open Sans", "sans-serif"],
+        // body: ["Open Sans", "sans-serif"],
+      },
+      keyframes: {
+        "slide-in": {
+          "0%": {
+            "-webkit-transform": "translateX(120%)",
+            transform: "translateX(120%)",
+          },
+          animation: {
+            "slide-in": "slide-in 0.5s ease-out",
+          },
+          "100%": {
+            "-webkit-transform": "translateX(0%)",
+            transform: "translateX(0%)",
+          },
+        },
+      },
+
+      backgroundImage: {},
     },
   },
   plugins: [],
-}
-export default config
+};
+export default config;
