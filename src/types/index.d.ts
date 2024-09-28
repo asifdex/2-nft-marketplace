@@ -28,4 +28,12 @@ declare  type transactionState ={
   transactionCount: number;
   transactions: Transaction[];
 }
-
+declare type TransactionsCardProps ={
+  addressTo: string;
+  addressFrom:string
+  amount: string;
+  keyword: string;
+  message: string;
+  timestamp:string;
+  url?:string
+}

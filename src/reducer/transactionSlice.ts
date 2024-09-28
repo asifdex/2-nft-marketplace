@@ -29,6 +29,8 @@ export const CKifwalletIsConnected = createAsyncThunk(
 
     const accounts =await window.ethereum.request({ method: "eth_accounts" });
     console.log(accounts, "account");
+    console.log(accounts.length,"eth");
+    
 
     if (accounts.length) {
       thunkApi.dispatch(setCurrentAccount(accounts[0]));
@@ -64,6 +66,8 @@ export const getAllTransaction = createAsyncThunk(
       }
       const availableTransaction =
         await transactionContract.getAllTransaction();
+        console.log(availableTransaction,"structTransation");
+        
       const structedTransation = availableTransaction.map(
         (transaction: any) => ({
           addressfrom: transaction.sender,
@@ -128,6 +132,17 @@ export const sendTransaction = createAsyncThunk(
   }
 );
 
+export const logoutWallet = createAsyncThunk(
+  "transaction/logoutWallet",
+  async (_, thunkAPI) => {
+    thunkAPI.dispatch(setCurrentAccount(null)); // Reset current account
+    thunkAPI.dispatch(setTransactions([])); // Optionally reset transactions
+    // Clear any other related state if necessary
+  }
+);
+
+
+
 const initialState: transactionState = {
   formData: { addressTo: "", amount: "", keyword: "", message: "" },
   currentAccount: null,
@@ -155,6 +170,9 @@ const transactionsSlice = createSlice({
     setIsLoading: (state, action) => {
       state.isLoading = action.payload;
     },
+    // logOutwallet : (state)=>{
+    //   state.currentAccount =null
+    // }
   },
   extraReducers :(builder)=>{
     builder.addCase(getAllTransaction.fulfilled,(state,action) =>{
@@ -162,6 +180,6 @@ const transactionsSlice = createSlice({
     })
   }
 });
-export const { setCurrentAccount, setFromData, setIsLoading, setTransactions } =
+export const { setCurrentAccount, setFromData, setIsLoading, setTransactions, } =
   transactionsSlice.actions;
 export default transactionsSlice.reducer;

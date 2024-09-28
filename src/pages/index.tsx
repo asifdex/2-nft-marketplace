@@ -9,7 +9,7 @@ import React from 'react'
 const index = () => {
   return (
     <div className="min-h-screen">
-    <div className="bg-[#161616] h-42">
+    <div className="gradient-bg-welcome">
       <Hero />
     </div>
     <Services />
