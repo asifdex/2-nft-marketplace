@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { collection } from "@/config/images";
 import Image from "next/image";
 import NavBarItem from "../NavBarItem";
@@ -7,17 +7,18 @@ import { logoutWallet, walletConect } from "@/reducer/transactionSlice";
 
 
 
-const header = () => {
+const Header = () => {
   const dispatch =useDispatch<appDispatch>();
   const {currentAccount} =useSelector((state:RootState)=>state.transactions);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (currentAccount) {
       dispatch(logoutWallet());
     } else {
       dispatch(walletConect());
     }
-  };
+  }, [currentAccount, dispatch]);
+
   useEffect(()=>{},[handleClick])
   return (
     <nav className="w-full flex md:justify-center justify-between items-center p-4 bg-black h-36">
@@ -39,4 +40,4 @@ const header = () => {
   );
 };
 
-export default header;
+export default Header;

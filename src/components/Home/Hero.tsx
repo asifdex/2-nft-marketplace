@@ -11,7 +11,7 @@ import {
 } from "@/reducer/transactionSlice";
 import { walletSlice } from "@/utils/walletSlice";
 
-const hero = () => {
+const Hero = () => {
   const dispatch = useDispatch<appDispatch>();
   const { formData, isLoading, currentAccount ,transactionCount} = useSelector(
     (state: RootState) => state.transactions
@@ -136,4 +136,4 @@ dispatch(sendTransaction());
   );
 };
 
-export default hero;
+export default Hero;

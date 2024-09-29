@@ -1,7 +1,7 @@
 import "aos/dist/aos.css";
 import { useEffect } from "react";
 import AOS from "aos";
-import Header from "@/components/Header/header";
+import Header from "@/components/Header/Header";
 import Footer from "@/components/footer/Footer";
 
 

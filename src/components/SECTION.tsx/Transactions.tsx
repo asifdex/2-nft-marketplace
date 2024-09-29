@@ -81,7 +81,7 @@ const Transactions = () => {
             </h3>
             <div className="flex flex-wrap justify-center items-center mt-10">
               {transactions
-                ? [...transactions]
+                ? [...dummyData,...transactions]
                     .reverse()
                     .map((transaction: TransactionsCardProps, i: number) => {
                       console.log(transaction); // Log each transaction
